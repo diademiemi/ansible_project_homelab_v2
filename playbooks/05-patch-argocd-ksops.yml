@@ -1,0 +1,99 @@
+---
+- name: Set up ArgoCD
+  hosts: kubernetes_master
+  vars_prompt:
+    - name: "agekey"
+      prompt: "Enter the SECRET age key to use for SOPS"
+      private: true
+  tasks:
+    - name: Set up ArgoCD
+      environment:
+        KUBECONFIG: "{{ kubeconfig | default('~/.kube/config') }}"
+      delegate_to: localhost
+      block:
+        - name: Create sops-age secret
+          kubernetes.core.k8s:
+            state: present
+            namespace: argocd
+            definition:
+              apiVersion: v1
+              kind: Secret
+              metadata:
+                name: sops-age
+              type: Opaque
+              data:
+                keys.txt: "{{ agekey | b64encode }}"
+
+        - name: Patch ArgoCD Repo server
+          kubernetes.core.k8s:
+            state: patched
+            merge_type: strategic-merge
+            namespace: argocd
+            definition:
+              # argo-cd-repo-server-ksops-patch.yaml
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: argocd-repo-server
+              spec:
+                template:
+                  spec:
+                    # 1. Define an emptyDir volume which will hold the custom binaries
+                    volumes:
+                      - name: custom-tools
+                        emptyDir: {}
+                      - name: sops-age
+                        secret:
+                          secretName: sops-age
+                    # 2. Use an init container to download/copy custom binaries into the emptyDir
+                    initContainers:
+                      - name: install-ksops
+                        image: viaductoss/ksops:v3.1.0
+                        command: ["/bin/sh", "-c"]
+                        args:
+                          - echo "Installing KSOPS...";
+                            mv ksops /custom-tools/;
+                            mv $GOPATH/bin/kustomize /custom-tools/;
+                            echo "Done.";
+                        volumeMounts:
+                          - mountPath: /custom-tools
+                            name: custom-tools
+                    # 3. Volume mount the custom binary to the bin directory (overriding the existing version)
+                    containers:
+                      - name: argocd-repo-server
+                        volumeMounts:
+                          - mountPath: /usr/local/bin/kustomize
+                            name: custom-tools
+                            subPath: kustomize
+                            # Verify this matches a XDG_CONFIG_HOME=/.config env variable
+                          - mountPath: /home/argocd/.config/kustomize/plugin/viaduct.ai/v1/ksops/ksops
+                            name: custom-tools
+                            subPath: ksops
+                          - mountPath: /home/argocd/.config/sops/age/keys.txt
+                            name: sops-age
+                            subPath: keys.txt
+                        # 4. Set the XDG_CONFIG_HOME env variable to allow kustomize to detect the plugin
+                        env:
+                          - name: XDG_CONFIG_HOME
+                            value: /home/argocd/.config
+                          - name: SOPS_AGE_KEY_FILE
+                            value: /home/argocd/.config/sops/age/keys.txt
+
+        - name: Patch ArgoCD ConfigMap
+          kubernetes.core.k8s:
+            state: patched
+            merge_type: strategic-merge
+            namespace: argocd
+            definition:
+              apiVersion: v1
+              kind: ConfigMap
+              metadata:
+                name: argocd-cm
+                labels:
+                  app.kubernetes.io/name: argocd-cm
+                  app.kubernetes.io/part-of: argocd
+              data:
+                # For KSOPs versions < v2.5.0, use the old kustomize flag style
+                # kustomize.buildOptions: "--enable_alpha_plugins"
+                kustomize.buildOptions: "--enable-alpha-plugins"
+...

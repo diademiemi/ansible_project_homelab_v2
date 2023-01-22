@@ -1,0 +1,47 @@
+---
+- name: Set PasswordAuthentication to no in /etc/ssh/sshd_config
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^PasswordAuthentication'
+    line: 'PasswordAuthentication no'
+    state: present
+  notify:
+    - Restart sshd
+
+- name: Install fail2ban
+  ansible.builtin.apt:
+    name: fail2ban
+    state: present
+
+- name: Enable fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: true
+
+- name: Set necessary sysctl values
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_set: true
+    sysctl_file: /etc/sysctl.d/99-libvirt.conf
+  loop:
+    - { name: 'net.ipv4.ip_forward', value: '1' }
+    - { name: 'net.ipv6.conf.all.forwarding', value: '1' }
+    - { name: 'net.ipv4.conf.all.send_redirects', value: '0' }
+  notify: Reboot system
+
+- name: Allow libvirt access to images in /var/lib/libvirt/images
+  ansible.builtin.lineinfile:
+    path: /etc/apparmor.d/abstractions/libvirt-qemu
+    regexp: '^  /var/lib/libvirt/images/.*'
+    line: '  /var/lib/libvirt/images/** wkr,'
+    state: present
+
+- name: Set root password
+  ansible.builtin.user:
+    name: root
+    password: "{{ libvirt_root_password }}"
+  when: libvirt_root_password is defined
+
+...

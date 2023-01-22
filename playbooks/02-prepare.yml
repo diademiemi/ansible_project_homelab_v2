@@ -1,0 +1,21 @@
+---
+- name: Set up Wireguard tunnel
+  hosts: kubernetes
+  become: true
+  pre_tasks:
+    - name: Check if transactional-update state is present
+      become: true
+      ansible.builtin.stat:
+        path: /var/lib/misc/transactional-update.state
+      register: transactional_update_state
+
+    - name: Touch transactional update state
+      become: true
+      ansible.builtin.file:
+        path: /var/lib/misc/transactional-update.state
+        state: touch # Needed for Ansible to detect transactional-update is required...
+      when: not transactional_update_state.stat.exists
+
+  roles:
+    - { role: diademiemi.wireguard, tags: ['wireguard', 'k3s-prepare'] }
+...

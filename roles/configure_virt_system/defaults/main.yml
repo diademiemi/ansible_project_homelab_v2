@@ -1,0 +1,4 @@
+---
+libvirt_allow_reboot: true
+
+...

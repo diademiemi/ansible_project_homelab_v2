@@ -1,0 +1,17 @@
+---
+- name: Install Libvirt daemon
+  ansible.builtin.apt:
+    name:
+      - libvirt-daemon
+      - libvirt-daemon-system
+      - libvirt-clients
+      - qemu-kvm
+      - qemu-utils
+    state: present
+
+- name: Enable and start Libvirt daemon
+  ansible.builtin.service:
+    name: libvirtd
+    state: started
+    enabled: true
+...

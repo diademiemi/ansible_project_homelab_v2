@@ -1,0 +1,19 @@
+---
+- name: Restart sshd
+  ansible.builtin.service:
+    name: sshd
+    state: restarted
+- name: Reboot system
+  ansible.builtin.reboot:
+    reboot_timeout: 600
+    connect_timeout: 60
+    pre_reboot_delay: 5
+    post_reboot_delay: 60
+    test_command: /bin/true
+  register: reboot_result
+  until: reboot_result is succeeded
+  retries: 5
+  delay: 60
+  when: libvirt_allow_reboot
+
+...

@@ -1,0 +1,17 @@
+---
+wireguard_master: hetzner_vm
+wireguard_peer: local_vm
+
+wireguard_subnet: 192.168.150.0/23
+wireguard_master_ip: 192.168.150.1/23
+wireguard_peer_ip: 192.168.150.2/23
+wireguard_port: 51820
+
+wireguard_network_interface_name: ens6
+wireguard_allowed_ips: "{{ wireguard_subnet }}"
+
+wireguard_packages:
+  - wireguard-tools
+  - iptables # Needed for network access
+
+...

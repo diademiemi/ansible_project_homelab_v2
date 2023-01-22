@@ -1,0 +1,23 @@
+---
+- name: Install Libvirt on the Hetzner Dedicated Server
+  hosts: libvirt
+  tags: install
+  roles:
+    - libvirt_host
+
+- name: Configure the system
+  hosts: libvirt
+  tags: configure
+  roles:
+    - configure_virt_system
+
+- name: Message
+  hosts: localhost
+  tasks:
+    - name: Message
+      debug:
+        msg: |
+          The Libvirt host is ready to use.
+          You should now move on to the Terraform repository to deploy the VMs.
+          Run 02-prepare.yml to proceed afterwards.
+...
