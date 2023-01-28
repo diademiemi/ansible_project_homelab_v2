@@ -48,7 +48,7 @@
                     # 2. Use an init container to download/copy custom binaries into the emptyDir
                     initContainers:
                       - name: install-ksops
-                        image: viaductoss/ksops:v3.1.0
+                        image: viaductoss/ksops:v4.0.0
                         command: ["/bin/sh", "-c"]
                         args:
                           - echo "Installing KSOPS...";
