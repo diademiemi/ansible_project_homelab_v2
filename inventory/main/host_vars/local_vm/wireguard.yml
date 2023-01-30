@@ -1,6 +1,6 @@
 ---
 wireguard_allowed_ips: "{{ wireguard_subnet }},192.168.100.0/24,10.107.0.0/16"
 new_hostname: omori
-k3s_extra_server_args: "--node-ip 192.168.150.2 --node-external-ip 192.168.150.2 --flannel-iface wg0 --node-label local"
+k3s_extra_server_args: "--node-ip 192.168.150.2 --node-external-ip 192.168.150.2 --flannel-iface wg0 --node-label location=local"
 
 ...
