@@ -1,6 +1,6 @@
 ---
 - name: Set up ArgoCD
-  hosts: kubernetes_master
+  hosts: kubernetes
   vars_prompt:
     - name: "agekey"
       prompt: "Enter the SECRET age key to use for SOPS"

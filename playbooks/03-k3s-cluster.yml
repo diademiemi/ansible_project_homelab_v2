@@ -1,12 +1,11 @@
 ---
 - name: Install K3S
-  hosts: kubernetes
-  pre_tasks:
-    - name: Set hostname
-      ansible.builtin.hostname:
-        name: "{{ new_hostname }}"
-      when: new_hostname is defined
+  hosts: hetzner_vm
+  roles:
+    - { role: diademiemi.k3s, tags: ['k3s', 'k3s-cluster'] }
 
+- name: Install K3S
+  hosts: local_vm
   roles:
     - { role: diademiemi.k3s, tags: ['k3s', 'k3s-cluster'] }
 ...

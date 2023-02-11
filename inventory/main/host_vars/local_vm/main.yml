@@ -1,0 +1,15 @@
+---
+k3s_role: master
+# k3s_extra_server_args: "--node-ip 192.168.150.2 --node-external-ip 192.168.150.2 --flannel-iface wg0 --node-label location=local"
+
+k3s_kubeconfig_local_dest: ~/.kube/homelab-local.yaml
+kubeconfig: "{{ k3s_kubeconfig_local_dest }}"
+
+
+# wireguard_iptables_forward: true
+# wireguard_physical_interface: ens3
+# wireguard_ip: "192.168.150.2/24"
+# wireguard_allowed_ips: "{{ wireguard_ip }}"
+# wireguard_additional_allowed_ips: "192.168.100.0/24"
+
+...

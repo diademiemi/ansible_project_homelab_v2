@@ -1,6 +1,21 @@
 ---
 - name: Set up Wireguard tunnel
-  hosts: kubernetes
+  hosts: hetzner_vm
+  tags: wireguard
   roles:
     - { role: diademiemi.wireguard, tags: ['wireguard', 'k3s-prepare'] }
+
+- name: Local VM preparation
+  hosts: local_vm
+  roles:
+    - { role: diademiemi.openzfs, tags: ['openzfs', 'k3s-prepare'] }
+  tasks:
+    - name: Increase inotify watchers
+      lineinfile:
+        path: /etc/sysctl.conf
+        regexp: '^fs.inotify.max_user_watches'
+        line: 'fs.inotify.max_user_watches=524288'
+        create: true
+      become: true
+
 ...
