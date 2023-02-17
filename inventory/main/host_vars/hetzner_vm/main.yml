@@ -2,6 +2,8 @@
 k3s_role: master
 # k3s_extra_server_args: "--node-ip 192.168.150.1 --node-external-ip 192.168.150.1 --flannel-iface wg0 --node-label location=cloud"
 
+k3s_extra_server_args: "--no-deploy traefik"
+
 k3s_kubeconfig_local_dest: ~/.kube/homelab-cloud.yaml
 kubeconfig: "{{ k3s_kubeconfig_local_dest }}"
 
