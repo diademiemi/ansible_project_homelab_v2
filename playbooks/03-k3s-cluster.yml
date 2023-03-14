@@ -8,4 +8,23 @@
   hosts: local_vm
   roles:
     - { role: diademiemi.k3s, tags: ['k3s', 'k3s-cluster'] }
+
+- name: Add startup cron to uncordon node
+  hosts: kubernetes
+  tasks:
+    - name: Add cron job
+      become: true
+      tags: cron
+      ansible.builtin.cron:
+        special_time: reboot
+        name: Uncordon node
+        job: until /usr/local/bin/kubectl get nodes; do sleep 5; echo "Retrying..."; done; /usr/local/bin/kubectl uncordon {{ ansible_hostname }}
+      
+    - name: Uncordon every 15 minuts
+      become: true
+      tags: cron
+      ansible.builtin.cron:
+        name: Uncordon node every 15 minutes
+        minute: "*/15"
+        job: /usr/local/bin/kubectl uncordon {{ ansible_hostname }}
 ...
